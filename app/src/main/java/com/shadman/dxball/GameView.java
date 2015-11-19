@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.view.MotionEvent;
 import android.view.View;
 
 /**
@@ -11,16 +12,33 @@ import android.view.View;
  */
 public class GameView extends View {
     Paint paint;
+    Bar bar;
+    Ball ball;
+    float xT;
     float x=0,y=0, radius=0;
     boolean firstTime=true;
 
-    public GameView(Context context) {
+    public GameView(final Context context) {
         super(context);
         paint = new Paint();
-    }
-
-    public void calculateNextPos() {
-        y++;
+        bar = new Bar();
+        ball = new Ball();
+        setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(ball.isBallAlive()) {
+                    xT = event.getX();
+                    if (xT < v.getWidth() / 2 && bar.getBarLeft() > 0) {
+                        bar.setBarLeft(bar.getBarLeft()-10);
+                        xT=-10;
+                    } else if (xT >= v.getWidth() / 2 && bar.getBarRight() < v.getWidth()) {
+                        bar.setBarLeft(bar.getBarLeft()+10);
+                        xT=-10;
+                    }
+                }
+                return true;
+            }
+        });
     }
 
     @Override
@@ -28,15 +46,15 @@ public class GameView extends View {
         super.onDraw(canvas);
         if (firstTime) {
             firstTime = false;
-            x=canvas.getWidth()/2;
-            y=canvas.getHeight()/2;
+            bar.setBar(canvas);
+            ball.setBall(canvas, bar);
         }
-        calculateNextPos();
         canvas.drawRGB(255, 255, 255);
         paint.setColor(Color.BLACK);
         paint.setStyle(Paint.Style.FILL);
-        canvas.drawCircle(x,y,40,paint);
-        //canvas.drawRect(100, 100, 200, 200, paint);
+        ball.drawBall(canvas, paint);
+        bar.drawBar(canvas, paint);
+        ball.nextPos(canvas, bar);
         invalidate();
     }
 }
